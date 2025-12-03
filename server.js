@@ -6,10 +6,12 @@ import jwt from '@fastify/jwt';
 import Fastify from 'fastify';
 import { startMQTT } from './src/mqtt/mqttClient.js';
 import Blockchain from './src/blockchain/blockchain.js';
+import gatewayRoutes from './src/gateway/gateway.route.js';
 const fastify = Fastify({ logger: true });
 fastify.register(authRoutes);
 fastify.register(devicesRoutes);
 fastify.register(blockchainRoutes);
+fastify.register(gatewayRoutes);
 const chain = new Blockchain();
 // Registrar CORS
 fastify.register(cors, {
