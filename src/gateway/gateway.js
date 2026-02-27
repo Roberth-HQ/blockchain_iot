@@ -1,22 +1,31 @@
 import Fastify from 'fastify';
 import proxy from '@fastify/http-proxy';
-import pool from './db.js'
-import bcrypt from 'bcrypt'
-
-const password = '123456'
-const hashed = await bcrypt.hash(password, 10)
-console.log('aqui wey el codigo que buscas')
-console.log(hashed)
+import fastifyJwt from '@fastify/jwt';
+import authRoutes from './routes/auth.route.js';
 
 const fastify = Fastify({ logger: true });
 
-await pool.query('SELECT NOW()')
-console.log('DB funcionando')
+// JWT
+fastify.register(fastifyJwt, {
+  secret: 'supersecretkey'
+});
 
-// Proxy → redirige todas las rutas al servidor principal
+// Middleware Auth
+fastify.decorate("authenticate", async function(request, reply) {
+  try {
+    await request.jwtVerify()
+  } catch (err) {
+    reply.send(err)
+  }
+});
+
+// Rutas Auth
+fastify.register(authRoutes, { prefix: '/auth' });
+
+// Proxy SOLO para blockchain
 fastify.register(proxy, {
   upstream: 'http://localhost:3000',
-  prefix: '/', 
+  prefix: '/blockchain',
 });
 
 fastify.listen({ port: 4000 }, (err) => {
