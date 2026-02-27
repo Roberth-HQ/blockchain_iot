@@ -11,6 +11,7 @@ fastify.register(fastifyJwt, {
 });
 
 // Middleware Auth
+//fastify.decorate("authorize", authorize)
 fastify.decorate("authenticate", async function(request, reply) {
   try {
     await request.jwtVerify()
