@@ -12,3 +12,5 @@ nodemon gateway.js
 npm install concurrently --save-dev
 npm install @fastify/http-proxy
 
+npm install pg
+npm install bcryptjs

@@ -1,0 +1,15 @@
+CREATE TABLE admins (
+  id UUID PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE admins ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'ADMIN';
+
+INSERT INTO admins (id, email, password, role)
+VALUES (
+  gen_random_uuid(),
+  'root@system.com',
+  '$2b$10$7zfz6HeU7LrPpsLJ6Tu7feIukvyENqoKiDFj8nAV2aOLBYqhHmb06',
+  'SUPER_ADMIN'
+);

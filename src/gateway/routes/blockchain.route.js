@@ -1,5 +1,5 @@
 //import Blockchain from "../blockchain/blockchain.js";
-import Blockchain from "../blockchain/blockchain.js";
+import Blockchain from "../../blockchain/blockchain.js";
 
 export default async function blockchainRoutes(fastify, opts) {
   const chain = new Blockchain();
