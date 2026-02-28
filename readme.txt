@@ -14,3 +14,14 @@ npm install @fastify/http-proxy
 
 npm install pg
 npm install bcryptjs
+****instalacion de prisma******
+npm install prisma --save-dev
+npm install @prisma/client
+
+iniciaizar prisma
+npx prisma init
+crear tablas 
+npx prisma migrate dev --name init
+
+crear super usario con semilla 
+node prisma/seed.js

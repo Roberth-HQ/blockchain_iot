@@ -3,6 +3,9 @@
   "name": "back_chain",
   "version": "1.0.0",
   "main": "index.js",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "dev": "concurrently \"node server.js\" \"node src/gateway/gateway.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,9 +18,11 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/http-proxy": "^11.4.0",
     "@fastify/jwt": "^10.0.0",
+    "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
     "fastify": "^5.6.2",
     "fastify-cors": "^6.0.3",
     "fastify-env": "^2.1.1",
