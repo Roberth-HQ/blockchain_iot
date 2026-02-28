@@ -25,3 +25,5 @@ npx prisma migrate dev --name init
 
 crear super usario con semilla 
 node prisma/seed.js
+
+npm install fastify-plugin

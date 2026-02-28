@@ -1,7 +1,9 @@
 import Fastify from 'fastify';
 import proxy from '@fastify/http-proxy';
 import fastifyJwt from '@fastify/jwt';
+import authorizationPlugin from './modules/auth/authorization.js';
 import authRoutes from './modules/auth/auth.route.js';
+import userRoutes from './modules/users/users.routes.js'
 
 const fastify = Fastify({ logger: true });
 
@@ -20,8 +22,11 @@ fastify.decorate("authenticate", async function(request, reply) {
   }
 });
 
+fastify.register(authorizationPlugin)
 // Rutas Auth
 fastify.register(authRoutes, { prefix: '/auth' });
+//rutas usaurio
+fastify.register(userRoutes,{prefix:'/users'});
 
 // Proxy SOLO para blockchain
 fastify.register(proxy, {
