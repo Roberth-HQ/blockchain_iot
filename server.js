@@ -1,5 +1,5 @@
 import blockchainRoutes from './src/gateway/routes/blockchain.route.js';
-import authRoutes from './src/gateway/routes/auth.route.js';
+import authRoutes from './src/gateway/modules/auth/auth.route.js';
 import devicesRoutes from './src/gateway/routes/devices.route.js';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';

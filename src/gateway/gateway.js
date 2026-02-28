@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import proxy from '@fastify/http-proxy';
 import fastifyJwt from '@fastify/jwt';
-import authRoutes from './routes/auth.route.js';
+import authRoutes from './modules/auth/auth.route.js';
 
 const fastify = Fastify({ logger: true });
 
