@@ -23,3 +23,38 @@ enum Role {
   SUPER_ADMIN
   ADMIN
 }
+
+model Device {
+  id            String   @id @default(uuid())
+  deviceId      String   @unique
+  name          String?
+  status        DeviceStatus @default(PENDING)
+  publicKey     String?  @db.Text
+  isVerified    Boolean  @default(false)
+  lastSeen      DateTime?
+  firmware      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum DeviceStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+  SUSPENDED
+}
+
+model BlockchainRecord {
+  id          String   @id @default(uuid())
+  deviceId    String
+  action      String
+  hash        String   @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model Telemetry {
+  id        String   @id @default(uuid())
+  deviceId  String
+  data      Json
+  createdAt DateTime @default(now())
+}

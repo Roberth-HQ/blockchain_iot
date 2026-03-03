@@ -4,6 +4,7 @@ import fastifyJwt from '@fastify/jwt';
 import authorizationPlugin from './modules/auth/authorization.js';
 import authRoutes from './modules/auth/auth.route.js';
 import userRoutes from './modules/users/users.routes.js'
+import devicesRoutes from './modules/devices/devices.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -27,6 +28,8 @@ fastify.register(authorizationPlugin)
 fastify.register(authRoutes, { prefix: '/auth' });
 //rutas usaurio
 fastify.register(userRoutes,{prefix:'/users'});
+//rutas dispositivos
+fastify.register(devicesRoutes, {prefix: '/devices' })
 
 // Proxy SOLO para blockchain
 fastify.register(proxy, {
