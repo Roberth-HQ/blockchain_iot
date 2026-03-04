@@ -22,6 +22,7 @@ iniciaizar prisma
 npx prisma init
 crear tablas 
 npx prisma migrate dev --name init
+npx prisma generate
 
 crear super usario con semilla 
 node prisma/seed.js

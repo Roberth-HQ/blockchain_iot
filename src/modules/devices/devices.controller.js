@@ -7,9 +7,17 @@ import {
 
 export async function createDeviceController(request, reply) {
   try {
-    const { deviceId, name } = request.body
+    const { deviceCode, name, gatewayId } = request.body
 
-    const device = await createDeviceService(deviceId, name)
+    if (!deviceCode) {
+      return reply.status(400).send({ message: 'deviceCode is required' })
+    }
+
+    const device = await createDeviceService({
+      deviceCode,
+      name,
+      gatewayId
+    })
 
     return reply.status(201).send(device)
 
@@ -21,8 +29,7 @@ export async function createDeviceController(request, reply) {
 export async function getAllDevicesController(request, reply) {
   try {
     const devices = await getAllDevicesService()
-    console.log("HELLO HURCAIN !!!!")
-    return devices
+    return reply.send(devices)
   } catch (error) {
     return reply.status(500).send({ error: error.message })
   }
@@ -38,7 +45,7 @@ export async function getDeviceByIdController(request, reply) {
       return reply.status(404).send({ message: 'Device not found' })
     }
 
-    return device
+    return reply.send(device)
 
   } catch (error) {
     return reply.status(500).send({ error: error.message })
@@ -51,7 +58,7 @@ export async function revokeDeviceController(request, reply) {
 
     const device = await revokeDeviceService(id)
 
-    return device
+    return reply.send(device)
 
   } catch (error) {
     return reply.status(500).send({ error: error.message })

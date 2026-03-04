@@ -7,7 +7,7 @@
     "seed": "node prisma/seed.js"
   },
   "scripts": {
-    "dev": "concurrently \"node server.js\" \"node src/gateway/gateway.js\"",
+    "dev": "concurrently \"node server.js\" \"node src/modules/gateway/gateway.js\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

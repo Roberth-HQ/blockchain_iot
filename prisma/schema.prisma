@@ -24,17 +24,31 @@ enum Role {
   ADMIN
 }
 
+model Gateway {
+  id         String   @id @default(uuid())
+  name       String?
+  publicKey  String   @db.Text   // Clave pública para validar firma
+  firmware   String?
+  lastSeen   DateTime?
+  createdAt  DateTime @default(now())
+
+  devices    Device[]
+}
+
 model Device {
   id            String   @id @default(uuid())
   deviceId      String   @unique
   name          String?
   status        DeviceStatus @default(PENDING)
-  publicKey     String?  @db.Text
-  isVerified    Boolean  @default(false)
-  lastSeen      DateTime?
-  firmware      String?
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  gatewayId   String?
+  gateway     Gateway? @relation(fields: [gatewayId], references: [id])
+
+  sensors     Sensor[]
+  blockchainLogs BlockchainRecord[]
 }
 
 enum DeviceStatus {
@@ -44,17 +58,40 @@ enum DeviceStatus {
   SUSPENDED
 }
 
-model BlockchainRecord {
+model Sensor {
   id          String   @id @default(uuid())
-  deviceId    String
-  action      String
-  hash        String   @db.Text
+  name        String?
+  type        String        // temperature, humidity, gps, etc
+  unit        String?       // °C, %, km/h
+  minThreshold Float?
+  maxThreshold Float?
   createdAt   DateTime @default(now())
+
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id])
+
+  readings    Reading[]
 }
 
-model Telemetry {
+
+model Reading {
+  id        String   @id @default(uuid())
+  value     Float
+  timestamp DateTime @default(now())
+  hash      String?  @db.Text   // hash individual opcional
+
+  sensorId  String
+  sensor    Sensor   @relation(fields: [sensorId], references: [id])
+}
+
+
+model BlockchainRecord {
   id        String   @id @default(uuid())
   deviceId  String
-  data      Json
+  action    String   // REGISTER, BATCH_HASH, VERIFY, etc
+  hash      String   @db.Text
+  txHash    String?  // hash de transacción blockchain
   createdAt DateTime @default(now())
+
+  device    Device   @relation(fields: [deviceId], references: [id])
 }

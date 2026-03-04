@@ -1,6 +1,7 @@
 // src/gateway/gateway.service.js
 import { nanoid } from 'nanoid';
-import blockchain from '../blockchain/blockchain.js';  // tu instancia
+//import blockchain from '../blockchain/blockchain.js';  // tu instancia
+import blockchain from '../../blockchain/blockchain.js';
 import jwt from 'jsonwebtoken';
 
 class GatewayService {

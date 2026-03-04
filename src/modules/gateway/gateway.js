@@ -1,10 +1,12 @@
 import Fastify from 'fastify';
 import proxy from '@fastify/http-proxy';
 import fastifyJwt from '@fastify/jwt';
-import authorizationPlugin from './modules/auth/authorization.js';
-import authRoutes from './modules/auth/auth.route.js';
-import userRoutes from './modules/users/users.routes.js'
-import devicesRoutes from './modules/devices/devices.routes.js';
+import authorizationPlugin from '../auth/authorization.js';
+import authRoutes from '../auth/auth.route.js';
+import userRoutes from '../users/users.routes.js'
+import devicesRoutes from '../devices/devices.routes.js';
+import readingRoutes from '../reading/reading.routes.js';
+import sensorRoutes from '../sensors/sensors.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -30,6 +32,10 @@ fastify.register(authRoutes, { prefix: '/auth' });
 fastify.register(userRoutes,{prefix:'/users'});
 //rutas dispositivos
 fastify.register(devicesRoutes, {prefix: '/devices' })
+//rutas de sensores
+fastify.register(sensorRoutes,{prefix: '/sensors' })
+//rutas de readings
+fastify.register(readingRoutes,{prefix: '/reading' })
 
 // Proxy SOLO para blockchain
 fastify.register(proxy, {

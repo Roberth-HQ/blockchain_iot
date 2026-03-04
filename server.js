@@ -1,17 +1,21 @@
-import blockchainRoutes from './src/gateway/routes/blockchain.route.js';
-import authRoutes from './src/gateway/modules/auth/auth.route.js';
-import devicesRoutes from './src/gateway/routes/devices.route.js';
+//import blockchainRoutes from './src/gateway/routes/blockchain.route.js';
+import blockchainRoutes from './src/modules/gateway/routes/blockchain.route.js'
+//import authRoutes from './src/gateway/modules/auth/auth.route.js';
+import authRoutes from './src/modules/auth/auth.route.js';
+//import devicesRoutes from './src/gateway/routes/devices.route.js';
+import devicesRoutes from './src/modules/devices/devices.routes.js';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import Fastify from 'fastify';
 import { startMQTT } from './src/mqtt/mqttClient.js';
 import Blockchain from './src/blockchain/blockchain.js';
-import gatewayRoutes from './src/gateway/gateway.route.js';
+//import gatewayRoutes from './src/gateway/gateway.route.js';
+import gatewayRoutes from './src/modules/gateway/gateway.route.js'
 const fastify = Fastify({ logger: true });
-fastify.register(authRoutes);
-fastify.register(devicesRoutes);
-fastify.register(blockchainRoutes);
-fastify.register(gatewayRoutes);
+// fastify.register(authRoutes);
+// fastify.register(devicesRoutes);
+// fastify.register(blockchainRoutes);
+// fastify.register(gatewayRoutes);
 const chain = new Blockchain();
 // Registrar CORS
 fastify.register(cors, {
