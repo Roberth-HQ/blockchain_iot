@@ -1,18 +1,78 @@
-// src/gateway/gateway.controller.js
-import GatewayService from './gateway.service.js';
+    import {
+    createGatewayService,
+    getAllGatewaysService,
+    getGatewayByIdService,
+    updateGatewayService,
+    deactivateGatewayService
+    } from './gateway.service.js'
 
-export const receiveData = async (request, reply) => {
+    export async function createGatewayController(request, reply) {
     try {
-        const result = GatewayService.processIncomingData(request.body);
-        return reply.code(200).send(result);
-    } catch (err) {
-        return reply.code(400).send({ error: err.message });
+        const { publicKey } = request.body
+
+        if (!publicKey) {
+        return reply.status(400).send({
+            message: 'publicKey is required'
+        })
+        }
+
+        const gateway = await createGatewayService(request.body)
+
+        return reply.status(201).send(gateway)
+
+    } catch (error) {
+        return reply.status(500).send({ error: error.message })
     }
-};
+    }
 
-export const registerDevice = async (request, reply) => {
-    const { deviceId, publicKey } = request.body;
+    export async function getAllGatewaysController(request, reply) {
+    try {
+        const gateways = await getAllGatewaysService()
+        return reply.send(gateways)
+    } catch (error) {
+        return reply.status(500).send({ error: error.message })
+    }
+    }
 
-    const result = GatewayService.registerDevice(deviceId, publicKey);
-    return reply.send(result);
-};
+    export async function getGatewayByIdController(request, reply) {
+    try {
+        const { id } = request.params
+
+        const gateway = await getGatewayByIdService(id)
+
+        if (!gateway) {
+        return reply.status(404).send({ message: 'Gateway not found' })
+        }
+
+        return reply.send(gateway)
+
+    } catch (error) {
+        return reply.status(500).send({ error: error.message })
+    }
+    }
+
+    export async function updateGatewayController(request, reply) {
+    try {
+        const { id } = request.params
+
+        const gateway = await updateGatewayService(id, request.body)
+
+        return reply.send(gateway)
+
+    } catch (error) {
+        return reply.status(500).send({ error: error.message })
+    }
+    }
+
+    export async function deactivateGatewayController(request, reply) {
+    try {
+        const { id } = request.params
+
+        const gateway = await deactivateGatewayService(id)
+
+        return reply.send(gateway)
+
+    } catch (error) {
+        return reply.status(500).send({ error: error.message })
+    }
+    }

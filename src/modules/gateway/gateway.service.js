@@ -1,49 +1,48 @@
-// src/gateway/gateway.service.js
-import { nanoid } from 'nanoid';
-//import blockchain from '../blockchain/blockchain.js';  // tu instancia
-import blockchain from '../../blockchain/blockchain.js';
-import jwt from 'jsonwebtoken';
+import prisma from '../../../prisma/client.js'
 
-class GatewayService {
-    constructor() {
-        this.allowedDevices = new Map(); // Lista blanca
+export async function createGatewayService({
+  name,
+  publicKey,
+  firmware
+}) {
+  return prisma.gateway.create({
+    data: {
+      name: name || null,
+      publicKey,
+      firmware: firmware || null
     }
-
-    registerDevice(deviceId, publicKey) {
-        this.allowedDevices.set(deviceId, { publicKey });
-        return { success: true };
-    }
-
-    verifyDevice(deviceId) {
-        return this.allowedDevices.has(deviceId);
-    }
-
-    normalizeData(data) {
-        return {
-            id: nanoid(),
-            deviceId: data.deviceId,
-            type: data.type,
-            value: data.value,
-            timestamp: Date.now()
-        };
-    }
-
-    processIncomingData(data) {
-        if (!this.verifyDevice(data.deviceId)) {
-            throw new Error("❌ Dispositivo NO autorizado.");
-        }
-
-        const normalized = this.normalizeData(data);
-
-        // Agregarlo a la blockchain
-        blockchain.addTransaction(normalized);
-
-        return {
-            success: true,
-            message: "Dato recibido y enviado al blockchain",
-            transaction: normalized
-        };
-    }
+  })
 }
 
-export default new GatewayService();
+export async function getAllGatewaysService() {
+  return prisma.gateway.findMany({
+    include: {
+      devices: true
+    }
+  })
+}
+
+export async function getGatewayByIdService(id) {
+  return prisma.gateway.findUnique({
+    where: { id },
+    include: {
+      devices: true
+    }
+  })
+}
+
+export async function updateGatewayService(id, data) {
+  return prisma.gateway.update({
+    where: { id },
+    data
+  })
+}
+
+export async function deactivateGatewayService(id) {
+  return prisma.gateway.update({
+    where: { id },
+    data: {
+      firmware: null
+    }
+  })
+}

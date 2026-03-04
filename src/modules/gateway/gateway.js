@@ -7,6 +7,8 @@ import userRoutes from '../users/users.routes.js'
 import devicesRoutes from '../devices/devices.routes.js';
 import readingRoutes from '../reading/reading.routes.js';
 import sensorRoutes from '../sensors/sensors.routes.js';
+import syncRoutes from '../sync/sync.routes.js';
+import gatewayRoutes from './gateway.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -36,6 +38,10 @@ fastify.register(devicesRoutes, {prefix: '/devices' })
 fastify.register(sensorRoutes,{prefix: '/sensors' })
 //rutas de readings
 fastify.register(readingRoutes,{prefix: '/reading' })
+//rutas de sycroinzacion
+fastify.register(syncRoutes,{prefix: '/sync' })
+//rutas de gateway
+fastify.register(gatewayRoutes,{prefix: '/gateways' })
 
 // Proxy SOLO para blockchain
 fastify.register(proxy, {
