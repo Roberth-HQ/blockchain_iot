@@ -9,6 +9,8 @@ import readingRoutes from '../reading/reading.routes.js';
 import sensorRoutes from '../sensors/sensors.routes.js';
 import syncRoutes from '../sync/sync.routes.js';
 import gatewayRoutes from './gateway.routes.js';
+import { locationRoutes } from '../location/location.routes.js';  
+import { projectRoutes } from '../project/proyect.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -42,6 +44,11 @@ fastify.register(readingRoutes,{prefix: '/reading' })
 fastify.register(syncRoutes,{prefix: '/sync' })
 //rutas de gateway
 fastify.register(gatewayRoutes,{prefix: '/gateways' })
+//rutas location
+fastify.register(locationRoutes,{ prefix:'/location' })
+//rutas proyectos
+fastify.register(projectRoutes,{prefix:'/project'})
+
 
 // Proxy SOLO para blockchain
 fastify.register(proxy, {
@@ -49,7 +56,7 @@ fastify.register(proxy, {
   prefix: '/blockchain',
 });
 
-fastify.listen({ port: 4000 }, (err) => {
+fastify.listen({ port: 4000,host:'0.0.0.0' }, (err) => {
   if (err) throw err;
   console.log('Gateway corriendo en http://localhost:4000');
 });

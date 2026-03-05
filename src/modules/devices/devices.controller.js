@@ -2,21 +2,23 @@ import {
   createDeviceService,
   getAllDevicesService,
   getDeviceByIdService,
-  revokeDeviceService
+  revokeDeviceService,
+  connectDeviceService
 } from './devices.service.js'
 
 export async function createDeviceController(request, reply) {
   try {
-    const { deviceCode, name, gatewayId } = request.body
+    const { deviceId, name, gatewayId } = request.body
 
-    if (!deviceCode) {
-      return reply.status(400).send({ message: 'deviceCode is required' })
+    if (!deviceId) {
+      return reply.status(400).send({ message: 'deviceId is required' })
     }
 
     const device = await createDeviceService({
-      deviceCode,
+      deviceId,
       name,
-      gatewayId
+      gatewayId,
+      locationId
     })
 
     return reply.status(201).send(device)
@@ -63,4 +65,27 @@ export async function revokeDeviceController(request, reply) {
   } catch (error) {
     return reply.status(500).send({ error: error.message })
   }
+}
+
+export async function connectDeviceController(request,reply) {
+  try{
+    const {deviceId} = request.body
+
+    if(!deviceId){
+      return reply.status(400).send({ message: 'deviceId es requerido'})
+    }
+  const device = await connectDeviceService(deviceId)
+
+  if (!device){
+    return reply.status(404).send({message:'desipositivo no registrado'})
+  }
+  return reply.send({
+    message:'Dispositivo conectado',
+    device
+  })
+
+  } catch(error){
+    return reply.status(500).send({ error: error.message})
+  }
+  
 }

@@ -1,11 +1,12 @@
 import prisma from '../../../prisma/client.js'
 
-export async function createDeviceService({ deviceCode, name, gatewayId }) {
+export async function createDeviceService({ deviceId, name, gatewayId, locationId }) {
   return prisma.device.create({
     data: {
-      deviceCode,
+      deviceId,
       name: name || null,
       gatewayId: gatewayId || null,
+      locationId: locationId || null,
       status: 'PENDING'
     }
   })
@@ -37,4 +38,24 @@ export async function revokeDeviceService(id) {
       status: 'REVOKED'
     }
   })
+}
+
+export async function connectDeviceService(deviceId) {
+
+  const device= await prisma.device.findUnique({
+    where:{deviceId}
+  })
+
+  if (!device){
+    return null
+  }
+
+  return prisma.device.update({
+    where:{deviceId},
+    data:{
+      status:'ACTIVE',
+      lastSeen: new Date()
+    }
+  })
+  
 }
