@@ -39,7 +39,7 @@ fastify.register(devicesRoutes, {prefix: '/devices' })
 //rutas de sensores
 fastify.register(sensorRoutes,{prefix: '/sensors' })
 //rutas de readings
-fastify.register(readingRoutes,{prefix: '/reading' })
+fastify.register(readingRoutes,{prefix: '/readings' })
 //rutas de sycroinzacion
 fastify.register(syncRoutes,{prefix: '/sync' })
 //rutas de gateway

@@ -8,12 +8,11 @@ import {
 
 export async function createDeviceController(request, reply) {
   try {
-    const { deviceId, name, gatewayId } = request.body
+    const { deviceId, name, gatewayId ,locationId} = request.body
 
     if (!deviceId) {
       return reply.status(400).send({ message: 'deviceId is required' })
     }
-
     const device = await createDeviceService({
       deviceId,
       name,

@@ -1,10 +1,20 @@
 import prisma from '../../../prisma/client.js'
+import { generateReadingHash } from '../../../utils/hash.js'
+import { createBatchHash } from '../../blockchain/blockchain.service.js'
 
 export async function createReadingService({ value, sensorId }) {
+
+  const timestamp = new Date()
+  const hash = generateReadingHash(sensorId, value, timestamp)
+  
+  await createBatchHash(sensorId)
+
   return prisma.reading.create({
     data: {
       value,
-      sensorId
+      sensorId,
+      timestamp,
+      hash
     }
   })
 }

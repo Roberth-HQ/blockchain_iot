@@ -63,6 +63,7 @@ model Device {
   deviceId      String   @unique
   name          String?
   status        DeviceStatus @default(PENDING)
+  lastSeen      DateTime? 
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
