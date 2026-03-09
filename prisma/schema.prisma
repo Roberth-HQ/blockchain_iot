@@ -106,6 +106,8 @@ model Reading {
   timestamp DateTime @default(now())
   hash      String?  @db.Text   // hash individual opcional
 
+  batched   Boolean @default(false)
+
   sensorId  String
   sensor    Sensor   @relation(fields: [sensorId], references: [id])
 }

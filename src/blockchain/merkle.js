@@ -1,34 +1,30 @@
 import crypto from "crypto"
 
-function hash(data) {
-  return crypto
-    .createHash("sha256")
-    .update(data)
-    .digest("hex")
-}
-
 export function buildMerkleRoot(hashes) {
 
   if (hashes.length === 0) return null
 
-  let level = hashes
+  let layer = hashes
 
-  while (level.length > 1) {
+  while (layer.length > 1) {
 
-    const nextLevel = []
+    const nextLayer = []
 
-    for (let i = 0; i < level.length; i += 2) {
+    for (let i = 0; i < layer.length; i += 2) {
 
-      if (i + 1 < level.length) {
-        nextLevel.push(hash(level[i] + level[i + 1]))
-      } else {
-        nextLevel.push(hash(level[i] + level[i]))
-      }
+      const left = layer[i]
+      const right = layer[i + 1] || left
 
+      const hash = crypto
+        .createHash("sha256")
+        .update(left + right)
+        .digest("hex")
+
+      nextLayer.push(hash)
     }
 
-    level = nextLevel
+    layer = nextLayer
   }
 
-  return level[0]
+  return layer[0]
 }
