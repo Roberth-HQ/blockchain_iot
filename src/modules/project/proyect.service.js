@@ -22,13 +22,17 @@ export async function getProjectByIdServices(id) {
 export async function updateProjectService(id, data) {
     return prisma.project.update({
         where: {id},
-        data
+        data: data
     })
 }
 
 export async function deleteProjectService(id) {
+    // 1. Verificar si existe
+    const exists = await prisma.project.findUnique({ where: { id } });
+    if (!exists) throw new Error("El proyecto no existe");
+
+    // 2. Borrar (Ojo: fallará si tiene Locations vinculadas)
     return prisma.project.delete({
-        where: {id}
-    })
-    
+        where: { id }
+    });
 }

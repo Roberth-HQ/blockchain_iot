@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import proxy from '@fastify/http-proxy';
 import fastifyJwt from '@fastify/jwt';
 import authorizationPlugin from '../auth/authorization.js';
@@ -28,6 +29,13 @@ fastify.decorate("authenticate", async function(request, reply) {
     reply.send(err)
   }
 });
+
+fastify.register(cors, {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // <--- AGREGAR ESTO
+  allowedHeaders: ['Content-Type', 'Authorization']
+});
+
 
 fastify.register(authorizationPlugin)
 // Rutas Auth

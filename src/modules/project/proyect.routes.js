@@ -11,5 +11,5 @@ export async function projectRoutes(fastify) {
     fastify.get('/',getAllProjectsController)
     fastify.get('/:id', getAllProjectsController)
     fastify.put('/:id',updateProjectController)
-    fastify.delete('/id', deleteProjectController)
+    fastify.delete('/:id', deleteProjectController)
 }

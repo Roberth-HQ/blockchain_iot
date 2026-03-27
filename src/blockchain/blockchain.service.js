@@ -32,7 +32,8 @@ export async function createBatchHash(sensorId) {
     data: {
       deviceId: sensor.deviceId,
       action: "MERKLE_ROOT",
-      hash: merkleRoot
+      hash: merkleRoot,
+      batchData: hashes
     }
   })
 
@@ -48,6 +49,6 @@ export async function createBatchHash(sensorId) {
     }
   })
   console.log("Merkle Root creado", merkleRoot)
-  
+
   return record
 }

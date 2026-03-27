@@ -33,7 +33,8 @@ export async function getProjectByIdController(request,reply) {
 export async function updateProjectController(request,reply) {
     try{
         const {id} = request.params
-        const project = await updateProjectService(id)
+        const data = request.body;
+        const project = await updateProjectService(id,data)
         return project
     } catch (error){
         return reply.status(500).send({error: error.message})

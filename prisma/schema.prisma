@@ -118,6 +118,7 @@ model BlockchainRecord {
   deviceId  String
   action    String   // REGISTER, BATCH_HASH, VERIFY, etc
   hash      String   @db.Text
+  batchData Json?
   txHash    String?  // hash de transacción blockchain
   createdAt DateTime @default(now())
 

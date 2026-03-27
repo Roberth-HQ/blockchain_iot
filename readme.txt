@@ -28,3 +28,5 @@ crear super usario con semilla
 node prisma/seed.js
 
 npm install fastify-plugin
+
+npm install cors
