@@ -21,9 +21,10 @@ export async function createSensorService({
 }
 
 export async function getAllSensorsService() {
-  return prisma.sensor.findMany({
+  return prisma.device.findMany({
     include: {
-      device: true
+      sensors: true, // <--- ESTO ES VITAL
+      gateway: true
     }
   })
 }
@@ -33,7 +34,10 @@ export async function getSensorByIdService(id) {
     where: { id },
     include: {
       device: true,
-      readings: true
+      readings: {
+        orderBy: { timestamp: 'desc' }, // <--- Esto hará que el Front muestre lo más nuevo arriba
+        take: 50 // Opcional: Limitar a las últimas 50 para no saturar
+      }
     }
   })
 }
