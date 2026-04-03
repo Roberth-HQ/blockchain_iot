@@ -114,13 +114,15 @@ model Reading {
 
 
 model BlockchainRecord {
-  id        String   @id @default(uuid())
-  deviceId  String
-  action    String   // REGISTER, BATCH_HASH, VERIFY, etc
-  hash      String   @db.Text
-  batchData Json?
-  txHash    String?  // hash de transacción blockchain
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  deviceId     String
+  action       String   // "MERKLE_ROOT", "REGISTER", etc.
+  hash         String   @db.Text // El Merkle Root actual
+  previousHash String   @default("0") @db.Text // <--- AGREGAMOS ESTO para el encadenamiento
+  batchData    Json?    // Array de hashes de las 10 lecturas
+  txHash       String?  // Hash de transacción externa (si usaras una red como Ethereum)
+  createdAt    DateTime @default(now())
 
-  device    Device   @relation(fields: [deviceId], references: [id])
+  // Mantenemos la relación, es muy útil para filtros
+  device       Device   @relation(fields: [deviceId], references: [id])
 }

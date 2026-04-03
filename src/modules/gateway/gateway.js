@@ -12,6 +12,7 @@ import syncRoutes from '../sync/sync.routes.js';
 import gatewayRoutes from './gateway.routes.js';
 import { locationRoutes } from '../location/location.routes.js';  
 import { projectRoutes } from '../project/proyect.routes.js';
+import blockchainRoutes from '../../blockchain/blockchain.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -56,6 +57,10 @@ fastify.register(gatewayRoutes,{prefix: '/gateways' })
 fastify.register(locationRoutes,{ prefix:'/location' })
 //rutas proyectos
 fastify.register(projectRoutes,{prefix:'/project'})
+
+//rutas de blockchain
+// Ejemplo de cómo lo estarás registrando:
+fastify.register(blockchainRoutes, { prefix: '/api/blockchain' })
 
 
 // Proxy SOLO para blockchain
