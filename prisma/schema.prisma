@@ -116,13 +116,22 @@ model Reading {
 model BlockchainRecord {
   id           String   @id @default(uuid())
   deviceId     String
-  action       String   // "MERKLE_ROOT", "REGISTER", etc.
-  hash         String   @db.Text // El Merkle Root actual
-  previousHash String   @default("0") @db.Text // <--- AGREGAMOS ESTO para el encadenamiento
-  batchData    Json?    // Array de hashes de las 10 lecturas
-  txHash       String?  // Hash de transacción externa (si usaras una red como Ethereum)
+  action       String   // "MERKLE_ROOT", "AUDIT_LOG", etc.
+  
+  // La raíz del árbol de las 10 lecturas
+  merkleRoot   String?   @db.Text 
+  
+  // El hash único de este bloque (Hash de: previousHash + merkleRoot + createdAt)
+  blockHash    String?   @db.Text 
+  
+  // Link al bloque anterior del MISMO dispositivo
+  previousHash String   @default("0") @db.Text 
+  
+  // Los 10 hashes originales para que el botón de verificación pueda trabajar
+  batchData    Json?    
+  
+  txHash       String?  // Opcional: para integraciones futuras con redes públicas
   createdAt    DateTime @default(now())
 
-  // Mantenemos la relación, es muy útil para filtros
   device       Device   @relation(fields: [deviceId], references: [id])
 }

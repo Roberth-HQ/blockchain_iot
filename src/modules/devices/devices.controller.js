@@ -3,7 +3,10 @@ import {
   getAllDevicesService,
   getDeviceByIdService,
   revokeDeviceService,
-  connectDeviceService
+  connectDeviceService,
+  activateDeviceService,
+  updateDeviceService,
+  deleteDeviceService
 } from './devices.service.js'
 
 export async function createDeviceController(request, reply) {
@@ -87,4 +90,36 @@ export async function connectDeviceController(request,reply) {
     return reply.status(500).send({ error: error.message})
   }
   
+}
+
+export async function activateDeviceController(request, reply) {
+  try {
+    const { id } = request.params
+    const device = await activateDeviceService(id)
+    return reply.send({ message: 'Dispositivo activado con éxito', device })
+  } catch (error) {
+    return reply.status(500).send({ error: error.message })
+  }
+}
+
+export async function updateDeviceController(request, reply) {
+  try {
+    const { id } = request.params
+    const { name, gatewayId, locationId } = request.body
+    const device = await updateDeviceService(id, { name, gatewayId, locationId })
+    return reply.send(device)
+  } catch (error) {
+    return reply.status(500).send({ error: error.message })
+  }
+}
+
+export async function deleteDeviceController(request, reply) {
+  try {
+    const { id } = request.params
+    await deleteDeviceService(id)
+    return reply.status(204).send()
+  } catch (error) {
+    console.error("ERROR EN DELETE:", error) // <-- AGREGA ESTO
+    return reply.status(500).send({ error: error.message })
+  }
 }

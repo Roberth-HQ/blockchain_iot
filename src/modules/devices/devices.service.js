@@ -59,3 +59,24 @@ export async function connectDeviceService(deviceId) {
   })
   
 }
+
+
+export async function activateDeviceService(id) {
+  return prisma.device.update({
+    where: { id },
+    data: { status: 'ACTIVE' } // O 'PENDING' según tu lógica
+  })
+}
+
+export async function updateDeviceService(id, data) {
+  return prisma.device.update({
+    where: { id },
+    data // Aquí pasamos los campos que queremos actualizar
+  })
+}
+
+export async function deleteDeviceService(id) {
+  return prisma.device.delete({
+    where: { id }
+  })
+}
