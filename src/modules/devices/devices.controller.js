@@ -69,27 +69,27 @@ export async function revokeDeviceController(request, reply) {
   }
 }
 
-export async function connectDeviceController(request,reply) {
-  try{
-    const {deviceId} = request.body
+export async function connectDeviceController(request, reply) {
+  const { deviceId, publicKey } = request.body;
 
-    if(!deviceId){
-      return reply.status(400).send({ message: 'deviceId es requerido'})
-    }
-  const device = await connectDeviceService(deviceId)
-
-  if (!device){
-    return reply.status(404).send({message:'desipositivo no registrado'})
+  if (!deviceId || !publicKey) {
+    return reply.code(400).send({ 
+      error: "Se requiere deviceId (ChipID) y publicKey para la activación." 
+    });
   }
-  return reply.send({
-    message:'Dispositivo conectado',
-    device
-  })
 
-  } catch(error){
-    return reply.status(500).send({ error: error.message})
+  try {
+    const activatedDevice = await connectDeviceService(deviceId, publicKey);
+    return {
+      message: "Dispositivo activado y vinculado correctamente",
+      device: {
+        name: activatedDevice.name,
+        status: activatedDevice.status
+      }
+    };
+  } catch (error) {
+    return reply.code(403).send({ error: error.message });
   }
-  
 }
 
 export async function activateDeviceController(request, reply) {

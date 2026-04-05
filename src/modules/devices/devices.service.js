@@ -40,24 +40,31 @@ export async function revokeDeviceService(id) {
   })
 }
 
-export async function connectDeviceService(deviceId) {
+export async function connectDeviceService(deviceId, publicKey) {
+  // 1. Buscamos si el administrador ya creó el registro (en PENDING)
+  const device = await prisma.device.findUnique({
+    where: { deviceId }
+  });
 
-  const device= await prisma.device.findUnique({
-    where:{deviceId}
-  })
-
-  if (!device){
-    return null
+  if (!device) {
+    throw new Error("El dispositivo no está registrado en el sistema.");
   }
 
+  // 2. Si el dispositivo ya está ACTIVE y tiene una publicKey diferente, 
+  // podría ser un intento de suplantación.
+  if (device.status === 'ACTIVE' && device.publicKey !== publicKey) {
+    throw new Error("Conflicto de seguridad: La clave pública no coincide.");
+  }
+
+  // 3. Actualizamos a ACTIVE y guardamos la llave pública
   return prisma.device.update({
-    where:{deviceId},
-    data:{
-      status:'ACTIVE',
+    where: { deviceId },
+    data: {
+      publicKey: publicKey,
+      status: 'ACTIVE',
       lastSeen: new Date()
     }
-  })
-  
+  });
 }
 
 

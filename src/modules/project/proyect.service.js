@@ -14,9 +14,20 @@ export async function getAllProjectsService() {
 }
 
 export async function getProjectByIdServices(id) {
-    return prisma.project.findUnique({
-        where:{id}
-    })
+  return await prisma.project.findUnique({
+    where: { id },
+    include: {
+      locations: {
+        include: {
+          devices: {
+            include: {
+              sensors: true // Esto es lo que nos permite contar todo
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 export async function updateProjectService(id, data) {

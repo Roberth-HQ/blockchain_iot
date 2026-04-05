@@ -64,7 +64,7 @@ model Device {
   name          String?
   status        DeviceStatus @default(PENDING)
   lastSeen      DateTime? 
-  
+  publicKey    String?      @unique // <-- NUEVO: Aquí guardamos la "llave"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

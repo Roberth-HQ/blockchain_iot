@@ -7,20 +7,25 @@ import {
 
 export async function createReadingController(request, reply) {
   try {
-    const { value, sensorId } = request.body
+    // 1. EXTRAER TODO DEL BODY (Añadimos deviceId y signature)
+    const { value, sensorId, deviceId, signature } = request.body
 
-    if (value === undefined || !sensorId) {
+    // 2. VALIDACIÓN DE ENTRADA (Ahora pedimos también el deviceId)
+    if (value === undefined || !sensorId || !deviceId) {
       return reply.status(400).send({
-        message: 'value and sensorId are required'
+        message: 'value, sensorId and deviceId are required'
       })
     }
 
-    const reading = await createReadingService({ value, sensorId })
+    // 3. PASAR TODO AL SERVICIO
+    // Ahora el servicio recibirá el deviceId y no dará "undefined"
+    const reading = await createReadingService({ value, sensorId, deviceId, signature })
 
     return reply.status(201).send(reading)
 
   } catch (error) {
-    return reply.status(500).send({ error: error.message })
+    // Si el servicio lanza el error de "Fraude", caerá aquí
+    return reply.status(403).send({ error: error.message })
   }
 }
 
