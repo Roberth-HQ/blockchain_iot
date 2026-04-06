@@ -87,3 +87,17 @@ export async function deleteDeviceService(id) {
     where: { id }
   })
 }
+
+export async function getDeviceConfigService(id) {
+  return prisma.device.findUnique({
+    where: { id: id },
+    include: {
+      sensors: true,
+      location: {
+        include: {
+          project: true // Para obtener el ID del proyecto al que pertenece
+        }
+      }
+    }
+  });
+}

@@ -6,7 +6,8 @@ import {
   connectDeviceController,
   activateDeviceController,
   updateDeviceController,
-  deleteDeviceController
+  deleteDeviceController,
+  getDeviceConfigController
 } from './devices.controller.js'
 
 export default async function devicesRoutes(fastify, options) {
@@ -19,5 +20,6 @@ export default async function devicesRoutes(fastify, options) {
   fastify.patch('/:id/activate', activateDeviceController) // Para des-revocar
   fastify.put('/:id', updateDeviceController)             // Para editar nombre/datos
   fastify.delete('/:id', deleteDeviceController)          // Para eliminar físicamente
+  fastify.get('/:id/config', getDeviceConfigController);
 
 }
