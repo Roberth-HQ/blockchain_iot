@@ -1,3 +1,4 @@
+    import prisma from '../../../prisma/client.js'
     import {
     createGatewayService,
     getAllGatewaysService,
@@ -103,43 +104,78 @@ export async function getAllGatewaysController(request, reply) {
 
 export async function receiveDataController(request, reply) {
   try {
-    const payload = request.body; // Ejemplo: "{"id":"MAC123","niv":450,"tapa":1,"lat":-16.5...}|FIRMA"
+    // 1. Separar el JSON de la Firma
+    const payload = request.body; 
+    if (!payload.includes('|')) {
+      return reply.status(400).send({ message: 'Formato inválido. Se espera DATA|FIRMA' });
+    }
+
     const [rawData, signature] = payload.split('|');
-    const data = JSON.parse(rawData);
+    const data = JSON.parse(rawData); 
 
-    // 1. Verificación de identidad y firma (Lo que hablamos antes)
-    const gateway = await getGatewayByIdService(data.id);
-    if (!gateway) return reply.status(404).send({ message: 'Gateway no registrado' });
+    /* ESTRUCTURA QUE VIENE EN data:
+      {
+        "gatewayMac": "24:0A:C4:00:01:10",
+        "devices": [
+          {
+            "deviceId": "NODO-TANQUE",
+            "nivel": 450,
+            "temperatura": 25
+          },
+          {
+            "deviceId": "NODO-GPS",
+            "lat": -16.5,
+            "lng": -68.1
+          }
+        ]
+      }
+    */
 
-    // 2. Mapeo inteligente de datos
-    // Definimos qué llaves del JSON corresponden a qué "type" en la DB
-    const mapaSensores = {
-      'niv': 'nivel',
-      'tapa': 'tapa_reed',
-      'lat': 'gps_lat',
-      'lng': 'gps_lng'
-    };
+    // 2. Identificar al Gateway por su MAC (o ID si prefieres enviarlo)
+    // Buscamos el gateway en la DB para obtener su llave pública y verificar la firma
+    const gateway = await prisma.gateway.findFirst({
+      where: { gatewayMac: data.gatewayMac }
+    });
+
+    if (!gateway) {
+      return reply.status(404).send({ message: 'Gateway no registrado' });
+    }
+
+    // --- AQUÍ VALIDARÍAS LA FIRMA CON gateway.publicKey ---
+    // const isValid = verify(rawData, signature, gateway.publicKey);
+    // if (!isValid) return reply.status(401).send({ message: 'Firma no válida' });
 
     const lecturasParaGuardar = [];
 
-    for (const [key, value] of Object.entries(data)) {
-      if (mapaSensores[key]) {
+    // 3. Mapeo Dinámico: No importa qué sensor mandes, si existe en la DB, se guarda
+    for (const dev of data.devices) {
+      const currentDeviceId = dev.deviceId;
+
+      for (const [key, value] of Object.entries(dev)) {
+        // Saltamos 'deviceId' porque no es un valor de sensor
+        if (key === 'deviceId') continue;
+
         lecturasParaGuardar.push({
-          type: mapaSensores[key], // Ej: 'nivel'
-          value: value             // Ej: 450
+          deviceId: currentDeviceId, // "NODO-TANQUE"
+          type: key,                // "nivel"
+          value: value               // 450
         });
       }
     }
 
-    // 3. Llamamos al servicio para guardar todo el lote (batch)
-    const result = await processGatewayReadingsService(gateway.id, lecturasParaGuardar);
+    // 4. Llamamos al servicio para guardar todo
+    const result = await processGatewayReadingsService(gateway.id, lecturasParaGuardar, signature);
     
     return reply.send({ 
       status: 'Procesado', 
-      registros: result.length 
+      totalReadings: result.length 
     });
 
   } catch (error) {
-    return reply.status(500).send({ error: error.message });
-  }
+  console.error("ERROR DETECTADO:", error); // Esto imprimirá la línea exacta en la terminal
+  return reply.status(500).send({ 
+    error: error.message, 
+    stack: error.stack // Esto te dirá el archivo y línea del error
+  });
+}
 }

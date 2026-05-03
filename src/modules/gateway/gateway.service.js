@@ -1,4 +1,5 @@
 import prisma from '../../../prisma/client.js'
+import crypto from 'crypto';
 
 export async function createGatewayService({
   name,
@@ -52,89 +53,113 @@ export async function deactivateGatewayService(id) {
 }
 
 //////
-// NUEVO: Registro inicial del Gateway con sus sensores
-export async function registerGatewayService({ gatewayMac, publicKey, locationId, sensors }) {
+export async function registerGatewayService({ gatewayMac, publicKey, locationId, devices }) {
   return prisma.$transaction(async (tx) => {
-    // 1. Buscamos si ya existe un Gateway con esa MAC
-    let gateway = await tx.gateway.findFirst({
-      where: { gatewayMac: gatewayMac } // Campo único que definimos en el esquema
-    });
-
+    // 1. Upsert del Gateway (Igual que antes)
+    let gateway = await tx.gateway.findFirst({ where: { gatewayMac } });
     if (gateway) {
-      // Si existe, actualizamos la llave y la última vez visto
       gateway = await tx.gateway.update({
         where: { id: gateway.id },
         data: { publicKey, lastSeen: new Date() }
       });
     } else {
-      // Si no existe, lo creamos con un ID automático (UUID)
       gateway = await tx.gateway.create({
-        data: {
-          gatewayMac: gatewayMac, // Guardamos la MAC como referencia única
-          name: `Gateway Cisterna ${gatewayMac.slice(-5)}`, // Nombre amigable
-          publicKey: publicKey,
-          locationId: locationId
-        }
+        data: { gatewayMac, publicKey, locationId, name: `GW-${gatewayMac.slice(-5)}` }
       });
     }
 
-    // 2. Crear o actualizar el Dispositivo vinculado
-    // Usamos upsert para evitar duplicados si el proceso se repite
-    const device = await tx.device.upsert({
-      where: { deviceId: `DEV-${gatewayMac}` },
-      update: { status: 'ACTIVE', lastSeen: new Date() },
-      create: {
-        deviceId: `DEV-${gatewayMac}`,
-        name: `Módulo Sensores`,
-        gatewayId: gateway.id,
-        locationId: locationId,
-        status: 'ACTIVE'
-      }
-    });
+    // 2. Bucle para procesar CUALQUIER cantidad de dispositivos
+    for (const dev of devices) {
+      const device = await tx.device.upsert({
+        where: { deviceId: dev.deviceId }, // ID único del nodo (ej: "NODO-TANQUE")
+        update: { status: 'ACTIVE', lastSeen: new Date() },
+        create: {
+          deviceId: dev.deviceId,
+          name: dev.name || "Nuevo Nodo",
+          gatewayId: gateway.id,
+          locationId: locationId,
+          status: 'ACTIVE'
+        }
+      });
 
-    // 3. Crear los sensores (solo si el dispositivo es nuevo o no los tiene)
-    const existingSensors = await tx.sensor.findMany({ where: { deviceId: device.id } });
-    
-    if (existingSensors.length === 0) {
-      for (const s of sensors) {
-        await tx.sensor.create({
-          data: {
-            name: s.name,
-            type: s.type,
-            unit: s.unit,
-            deviceId: device.id
-          }
+      // 3. Crear sensores para este dispositivo específico
+      for (const s of dev.sensors) {
+        // Evitamos duplicar sensores si ya existen en este dispositivo
+        const existing = await tx.sensor.findFirst({
+          where: { type: s.type, deviceId: device.id }
         });
+        
+        if (!existing) {
+          await tx.sensor.create({
+            data: {
+              name: s.name,
+              type: s.type,
+              unit: s.unit,
+              deviceId: device.id
+            }
+          });
+        }
       }
     }
-
     return gateway;
   });
 }
 
-// NUEVO: Guardar lecturas firmadas
-export async function processGatewayReadingsService(gatewayId, readings) {
+// NUEVO: Procesa lecturas de múltiples dispositivos
+export async function processGatewayReadingsService(gatewayId, readings, signature) {
   const registrosCreados = [];
-
   for (const r of readings) {
-    // Buscamos el sensor que coincida con el TYPE y que pertenezca a este GATEWAY
-    const sensor = await prisma.sensor.findFirst({
-      where: {
-        type: r.type,
-        device: { gatewayId: gatewayId }
-      }
-    });
-
-    if (sensor) {
-      const nuevaLectura = await prisma.reading.create({
-        data: {
-          value: parseFloat(r.value),
-          sensorId: sensor.id,
-          timestamp: new Date() // El servidor pone la hora de llegada
-        }
-      });
-      registrosCreados.push(nuevaLectura);
+    console.log("--- DEBUG DE BÚSQUEDA ---");
+  console.log("1. Buscando Sensor Type:", `"${r.type}"`);
+  console.log("2. En Dispositivo ID:", `"${r.deviceId}"`);
+  console.log("3. Para Gateway UUID:", `"${gatewayId}"`);
+    // IMPORTANTE: Ahora buscamos el sensor por TYPE y por su DEVICE específico
+const sensor = await prisma.sensor.findFirst({
+  where: {
+    type: r.type,
+    device: { 
+      deviceId: r.deviceId 
+      // Comentamos temporalmente el gatewayId para ver si así lo encuentra
+      // gatewayId: gatewayId 
     }
+  },
+  include: {
+    device: true // Esto nos traerá la info del dispositivo para comparar
+  }
+});
+
+if (sensor) {
+  console.log("V SENSOR ENCONTRADO pero...");
+  console.log("ID del Gateway en DB:", sensor.device.gatewayId);
+  console.log("ID del Gateway en LOG:", gatewayId);
+  
+  if (sensor.device.gatewayId !== gatewayId) {
+    console.log("!!! ALERTA: El dispositivo pertenece a OTRO Gateway !!!");
+  }
+}
+
+    if (!sensor) {
+    console.log("X No se encontró el sensor en la DB");
+  } else {
+    console.log("V Sensor encontrado ID:", sensor.id);
+  }
+
+
+  if (sensor) {
+  // Creamos una huella única para esta lectura específica
+  const dataToHash = `${sensor.id}-${r.value}-${new Date().getTime()}-${signature}`;
+  const readingHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
+
+  const nuevaLectura = await prisma.reading.create({
+    data: {
+      value: parseFloat(r.value),
+      sensorId: sensor.id,
+      hash: readingHash, // <-- AHORA GUARDAMOS EL HASH AQUÍ
+      timestamp: new Date()
+    }
+  });
+  registrosCreados.push(nuevaLectura);
+}
   }
   return registrosCreados;
 }
