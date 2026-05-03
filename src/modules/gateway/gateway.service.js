@@ -14,12 +14,16 @@ export async function createGatewayService({
   })
 }
 
-export async function getAllGatewaysService() {
+export async function getAllGatewaysService(locationId) {
+  // Creamos el objeto de condición
+  const where = locationId ? { locationId } : {};
+
   return prisma.gateway.findMany({
+    where: where, // <--- AQUÍ ESTABA EL ERROR, faltaba el filtro 'where'
     include: {
       devices: true
     }
-  })
+  });
 }
 
 export async function getGatewayByIdService(id) {

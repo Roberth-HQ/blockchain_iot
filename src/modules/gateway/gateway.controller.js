@@ -28,14 +28,19 @@
     }
     }
 
-    export async function getAllGatewaysController(request, reply) {
-    try {
-        const gateways = await getAllGatewaysService()
-        return reply.send(gateways)
-    } catch (error) {
-        return reply.status(500).send({ error: error.message })
-    }
-    }
+export async function getAllGatewaysController(request, reply) {
+  try {
+    // 1. Extraemos el filtro de la URL
+    const { locationId } = request.query;
+
+    // 2. Llamamos al servicio pasando el locationId (si existe)
+    const gateways = await getAllGatewaysService(locationId);
+    
+    return reply.send(gateways);
+  } catch (error) {
+    return reply.status(500).send({ error: error.message });
+  }
+}
 
     export async function getGatewayByIdController(request, reply) {
     try {

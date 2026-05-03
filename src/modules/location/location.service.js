@@ -1,11 +1,12 @@
 import prisma from '../../../prisma/client.js';
 
-export async function createLocationService({ name, address, projectId }) {
+export async function createLocationService({ name, address, projectId ,type}) {
   return prisma.location.create({
     data: {
       name,
       address: address || null,
-      projectId
+      projectId,
+      type: type || 'HOME'
     }
   });
 }

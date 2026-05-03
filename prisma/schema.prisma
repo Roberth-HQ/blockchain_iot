@@ -37,12 +37,19 @@ model Location {
   id        String   @id @default(uuid())
   name      String   // Ej: "Casa", "Planta Industrial", "Camión 12"
   address   String?  // opcional
+
+  type      LocationType @default(HOME)
   projectId String
   project   Project  @relation(fields: [projectId], references: [id])
   
   gateways  Gateway[]
   devices   Device[] // dispositivos directos sin gateway
   createdAt DateTime @default(now())
+}
+enum LocationType {
+  HOME
+  INDUSTRIAL
+  LOGISTICS
 }
 
 model Gateway {
