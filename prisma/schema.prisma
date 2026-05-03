@@ -46,16 +46,19 @@ model Location {
 }
 
 model Gateway {
-  id         String   @id @default(uuid())
-  name       String?
-  publicKey  String   @db.Text   // Clave pública para validar firma
-  firmware   String?
-  lastSeen   DateTime?
-  locationId String
-  location Location @relation(fields: [locationId], references: [id])
-  createdAt  DateTime @default(now())
-
-  devices    Device[]
+  id           String    @id @default(uuid()) // Este será el ID que el sistema le asigne
+  gatewayMac   String    @unique             // MAC Address del ESP32
+  name         String?
+  publicKey    String    @db.Text            // La llave generada por MAC + FlashID
+  status       DeviceStatus @default(PENDING)
+  lastSeen     DateTime?
+  
+  // Relación con Localidad: Para cisternas, la "Localidad" puede ser el Proyecto directamente
+  locationId   String?
+  location     Location? @relation(fields: [locationId], references: [id])
+  
+  createdAt    DateTime  @default(now())
+  devices      Device[]
 }
 
 model Device {
