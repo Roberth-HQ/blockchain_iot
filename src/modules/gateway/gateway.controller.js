@@ -10,6 +10,8 @@
 
     } from './gateway.service.js'
 
+    import { createVerify } from 'node:crypto';
+
     export async function createGatewayController(request, reply) {
     try {
         const { publicKey } = request.body
@@ -93,89 +95,122 @@ export async function getAllGatewaysController(request, reply) {
 
 
     ///////
-    export async function registerGatewayController(request, reply) {
+export async function registerGatewayController(request, reply) {
   try {
+    // Llamamos al servicio para crear el registro en la DB
     const gateway = await registerGatewayService(request.body);
-    return reply.status(201).send({ message: 'Gateway Auth OK', id: gateway.id });
+
+    // Preparamos la respuesta enriquecida para el ESP32
+    return reply.status(201).send({ 
+      message: 'Gateway Auth OK', 
+      // Este objeto 'config' es el que el ESP32 guardará en la SD
+      config: {
+        gatewayId: gateway.id,
+        gatewayMac: gateway.gatewayMac,
+        locationId: gateway.locationId,
+        serverEndpoint: "/gateways/data", // Para que el ESP32 sepa a dónde enviar datos
+        registeredAt: new Date().toISOString(),
+        status: "ACTIVE"
+      }
+    });
   } catch (error) {
+    console.error("Error en Registro:", error.message);
     return reply.status(500).send({ error: error.message });
   }
 }
 
 export async function receiveDataController(request, reply) {
   try {
-    // 1. Separar el JSON de la Firma
+    // 1. SEPARAR JSON DE LA FIRMA
     const payload = request.body; 
-    if (!payload.includes('|')) {
+    if (!payload || !payload.includes('|')) {
       return reply.status(400).send({ message: 'Formato inválido. Se espera DATA|FIRMA' });
     }
 
     const [rawData, signature] = payload.split('|');
     const data = JSON.parse(rawData); 
 
-    /* ESTRUCTURA QUE VIENE EN data:
-      {
-        "gatewayMac": "24:0A:C4:00:01:10",
-        "devices": [
-          {
-            "deviceId": "NODO-TANQUE",
-            "nivel": 450,
-            "temperatura": 25
-          },
-          {
-            "deviceId": "NODO-GPS",
-            "lat": -16.5,
-            "lng": -68.1
-          }
-        ]
-      }
-    */
-
-    // 2. Identificar al Gateway por su MAC (o ID si prefieres enviarlo)
-    // Buscamos el gateway en la DB para obtener su llave pública y verificar la firma
+    // 2. BUSCAR GATEWAY EN DB
     const gateway = await prisma.gateway.findFirst({
       where: { gatewayMac: data.gatewayMac }
     });
 
-    if (!gateway) {
-      return reply.status(404).send({ message: 'Gateway no registrado' });
+    if (!gateway) return reply.status(404).send({ message: 'Gateway no registrado' });
+
+    // REGLA DE ESTADO: Solo ACTIVE permite procesar
+    if (gateway.status !== 'ACTIVE') {
+      return reply.status(403).send({ message: 'Acceso denegado. Gateway no activo.' });
     }
 
-    // --- AQUÍ VALIDARÍAS LA FIRMA CON gateway.publicKey ---
-    // const isValid = verify(rawData, signature, gateway.publicKey);
-    // if (!isValid) return reply.status(401).send({ message: 'Firma no válida' });
+    // 3. VERIFICACIÓN DE FIRMA (ESTRATEGIA BUFFER)
+    try {
+      // Limpiamos la clave de cualquier espacio, salto de línea o encabezado basura
+      const cleanKeyBase64 = gateway.publicKey
+        .replace(/-----BEGIN PUBLIC KEY-----/g, '')
+        .replace(/-----END PUBLIC KEY-----/g, '')
+        .replace(/\s+/g, ''); 
 
+      const verifier = createVerify('sha256');
+      verifier.update(rawData);
+      verifier.end();
+
+      /**
+       * Usamos un objeto de configuración en lugar de un string PEM.
+       * Esto es mucho más robusto para OpenSSL en Node.js.
+       */
+      const publicKeyObject = {
+        key: Buffer.from(cleanKeyBase64, 'base64'),
+        format: 'der', // Binary format
+        type: 'spki'   // Subject Public Key Info
+      };
+
+      const isValid = verifier.verify(publicKeyObject, signature, 'hex');
+
+      if (!isValid) {
+        console.warn(`[VALIDACIÓN] Firma fallida para: ${data.gatewayMac}`);
+        return reply.status(401).send({ message: 'Firma digital inválida.' });
+      }
+
+      console.log(`[OK] Firma verificada para: ${data.gatewayMac}`);
+
+    } catch (cryptoError) {
+      console.error("--- ERROR EN VERIFICACIÓN CRIPTOGRÁFICA ---");
+      console.error("Detalle:", cryptoError.message);
+      
+      // Si la firma falla por formato, mostramos qué llegó a la DB
+      console.log("Contenido publicKey en DB:", gateway.publicKey);
+
+      return reply.status(500).send({ 
+        error: "Error de formato en Clave Pública.",
+        detail: cryptoError.message 
+      });
+    }
+
+    // 4. MAPEO DINÁMICO DE DISPOSITIVOS Y SENSORES
     const lecturasParaGuardar = [];
-
-    // 3. Mapeo Dinámico: No importa qué sensor mandes, si existe en la DB, se guarda
     for (const dev of data.devices) {
       const currentDeviceId = dev.deviceId;
-
       for (const [key, value] of Object.entries(dev)) {
-        // Saltamos 'deviceId' porque no es un valor de sensor
-        if (key === 'deviceId') continue;
+        if (key === 'deviceId') continue; // Saltamos el ID del nodo
 
         lecturasParaGuardar.push({
-          deviceId: currentDeviceId, // "NODO-TANQUE"
-          type: key,                // "nivel"
-          value: value               // 450
+          deviceId: currentDeviceId,
+          type: key,
+          value: value
         });
       }
     }
 
-    // 4. Llamamos al servicio para guardar todo
+    // 5. GUARDADO EN DB Y GENERACIÓN DE HASHES POR FILA
     const result = await processGatewayReadingsService(gateway.id, lecturasParaGuardar, signature);
     
     return reply.send({ 
-      status: 'Procesado', 
+      status: 'Autenticado y Procesado', 
       totalReadings: result.length 
     });
 
   } catch (error) {
-  console.error("ERROR DETECTADO:", error); // Esto imprimirá la línea exacta en la terminal
-  return reply.status(500).send({ 
-    error: error.message, 
-    stack: error.stack // Esto te dirá el archivo y línea del error
-  });
-}
+    console.error("ERROR CRÍTICO EN CONTROLADOR:", error);
+    return reply.status(500).send({ error: error.message });
+  }
 }

@@ -1,5 +1,6 @@
 import prisma from '../../../prisma/client.js'
 import crypto from 'crypto';
+import { createVerify } from 'node:crypto';
 
 export async function createGatewayService({
   name,

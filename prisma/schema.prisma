@@ -57,7 +57,7 @@ model Gateway {
   gatewayMac   String    @unique             // MAC Address del ESP32
   name         String?
   publicKey    String    @db.Text            // La llave generada por MAC + FlashID
-  status       DeviceStatus @default(PENDING)
+  status       DeviceStatus @default(ACTIVE)
   lastSeen     DateTime?
   
   // Relación con Localidad: Para cisternas, la "Localidad" puede ser el Proyecto directamente
